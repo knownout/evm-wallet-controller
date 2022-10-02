@@ -1,0 +1,40 @@
+{
+    "name": "@knownout/evm-wallet-controller",
+    "version": "0.1.0",
+    "author": "Alexandr <re-knownout> knownout@hotmail.com",
+    "license": "MIT",
+    "description": "EVM wallet controller",
+    "main": "dist/EvmWalletController.js",
+    "typings": "dist/EvmWalletController.d.ts",
+    "keywords": [
+        "blockchain",
+        "wallet",
+        "controller"
+    ],
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/re-knownout/evm-wallet-controller.git",
+        "directory": "src/package"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "bugs": {
+        "url": "https://github.com/re-knownout/evm-wallet-controller/issues"
+    },
+    "homepage": "https://github.com/re-knownout/evm-wallet-controller#readme",
+    "dependencies": {
+        "mobx": "^6.6.2",
+        "@knownout/base-controller": "^0.1.0",
+        "@knownout/modal-window-controller": "^0.1.1",
+        "@knownout/lib": "^0.1.3",
+        "bignumber.js": "^9.1.0",
+        "@metamask/providers": "^9.1.0",
+        "web3": "^1.8.0",
+        "@walletconnect/ethereum-provider": "^1.8.0"
+    }
+}
