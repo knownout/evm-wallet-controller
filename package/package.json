@@ -1,6 +1,6 @@
 {
     "name": "@knownout/evm-wallet-controller",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "author": "Alexandr <re-knownout> knownout@hotmail.com",
     "license": "MIT",
     "description": "EVM wallet controller",

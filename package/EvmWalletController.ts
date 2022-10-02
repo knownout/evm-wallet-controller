@@ -61,6 +61,9 @@ interface IEvmWalletState {
      * updates in real time.
      */
     accountChain?: number;
+
+    /** True if wallet balance updating right now. */
+    balanceUpdating?: boolean;
 }
 
 interface IEvmWalletData {
@@ -360,19 +363,21 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
     protected async getAccountBalance (account: string | undefined, chain: number | undefined) {
         if (!this.data.web3 || !chain || !account) return new BigNumber(0);
 
-        const rpcUrl = getNetworksValue("rpc", this.networksList)[chain];
-
-        if (!rpcUrl) return new BigNumber(0);
-
-        const httpWeb3Provider = new Web3(new Web3.providers.HttpProvider(rpcUrl));
-
         let rawBalance = "0";
 
         try {
-            await this.data.web3.eth.getBalance(account);
+            rawBalance = await this.data.web3.eth.getBalance(account);
         } catch { }
 
-        if (rawBalance === "0") rawBalance = await httpWeb3Provider.eth.getBalance(account);
+        if (rawBalance === "0") {
+            const rpcUrl = getNetworksValue("rpc", this.networksList)[chain];
+
+            if (!rpcUrl) return new BigNumber(Web3.utils.fromWei(rawBalance));
+
+            const httpWeb3Provider = new Web3(new Web3.providers.HttpProvider(rpcUrl));
+
+            rawBalance = await httpWeb3Provider.eth.getBalance(account);
+        }
 
         return new BigNumber(Web3.utils.fromWei(rawBalance));
     }
@@ -490,6 +495,10 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
      */
     @action
     private async walletBalanceSubscription (err: Error | undefined) {
+        if (this.state.balanceUpdating) return;
+
+        this.setState("balanceUpdating", true);
+
         if (err && this.#debugMode) this.#errorFunction?.(err);
 
         const changeForChain = this.state.accountChain;
@@ -498,7 +507,10 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
 
         if (!this.state.connected || changeForChain !== this.state.accountChain) return;
 
-        this.setState("balance", accountBalance);
+        this.setState({
+            balance: accountBalance,
+            balanceUpdating: false
+        });
     }
 }
 
