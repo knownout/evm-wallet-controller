@@ -416,6 +416,8 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
     private async walletAccountsSubscription (accounts: string[]) {
         if (accounts[0] === this.data.accountAddress || !this.state.connected) return;
 
+        const changeForChain = this.state.accountChain;
+
         const account = accounts[0];
 
         if (!account) {
@@ -429,7 +431,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
 
         const accountBalance = await this.getAccountBalance(account, this.state.accountChain);
 
-        if (!this.state.connected) return;
+        if (!this.state.connected || changeForChain !== this.state.accountChain) return;
 
         this.setState("balance", accountBalance);
         this.setData("accountAddress", account);
@@ -487,9 +489,11 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
     private async walletBalanceSubscription (err: Error | undefined) {
         if (err && this.#debugMode) this.#errorFunction?.(err);
 
+        const changeForChain = this.state.accountChain;
+
         const accountBalance = await this.getAccountBalance(this.data.accountAddress, this.state.accountChain);
 
-        if (!this.state.connected) return;
+        if (!this.state.connected || changeForChain !== this.state.accountChain) return;
 
         this.setState("balance", accountBalance);
     }
