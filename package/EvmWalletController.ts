@@ -267,6 +267,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
             const accountChain = await this.data.web3?.eth.getChainId();
             const accountBalance = await this.getAccountBalance(accounts[0], accountChain);
 
+            if (this.#debugMode) this.#debugFunction?.("EVM wallet connected", accounts[0]);
             this.setState({ connected: true, balance: accountBalance, accountChain });
 
             this.setData({ accountAddress: accounts[0], connectedWalletKey: walletKey });
@@ -295,7 +296,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
         this.resetData();
         this.resetState("loading");
 
-        if (this.#debugMode) this.#errorFunction?.("EVM wallet disconnected");
+        if (this.#debugMode) this.#debugFunction?.("EVM wallet disconnected");
     }
 
     /**
