@@ -62,6 +62,9 @@ interface IEvmWalletState {
      */
     accountChain?: number;
 
+    /** True only if chain exist in networks list */
+    accountChainValid?: boolean;
+
     /** True if wallet balance updating right now. */
     balanceUpdating?: boolean;
 }
@@ -274,11 +277,15 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
             this.#storageController.setItem(CachedEthereumProviderStorageKey, walletKey);
 
             const accountChain = await this.data.web3?.eth.getChainId();
+            const correctAccountChain = accountChain ? Boolean(this.networksList[accountChain])
+                ? accountChain : -1 : -1;
+
             const accountBalance = await this.getAccountBalance(accounts[0], accountChain);
 
             if (this.#debugMode) this.#debugFunction?.("EVM wallet connected", accounts[0]);
             this.setState({
-                accountChain: accountChain ? Boolean(this.networksList[accountChain]) ? accountChain : -1 : -1,
+                accountChain: correctAccountChain,
+                accountChainValid: correctAccountChain >= 0,
                 connected: true,
                 balance: accountBalance
             });
@@ -491,7 +498,8 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
         if (!this.networksList[correctChain]) {
             this.setState({
                 balance: new BigNumber(0),
-                accountChain: -1
+                accountChain: -1,
+                accountChainValid: false
             });
 
             if (this.#debugMode) this.#errorFunction?.("Unsupported chain selected:", correctChain);
@@ -505,6 +513,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
         if (!this.state.connected) return;
         this.setState({
             accountChain: correctChain,
+            accountChainValid: correctChain >= 0,
             balance: accountBalance
         });
     }
