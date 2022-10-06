@@ -91,6 +91,8 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
     /** Wallet connection modal key */
     #modalKey?: string;
 
+    #balanceUpdateInterval?: any;
+
     #debugMode = false;
 
     /** Console output function */
@@ -323,6 +325,8 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
             return;
         }
 
+        if (this.#balanceUpdateInterval) clearInterval(this.#balanceUpdateInterval);
+
         this.data.ethereum.off?.("accountsChanged", this.walletAccountsSubscription);
 
         this.data.ethereum.off?.("chainChanged", this.walletChainSubscription);
@@ -330,6 +334,8 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
         this.data.ethereum.on("accountsChanged", this.walletAccountsSubscription as any);
 
         this.data.ethereum.on("chainChanged", this.walletChainSubscription as any);
+
+        this.#balanceUpdateInterval = setInterval(this.walletBalanceSubscription, 5000);
 
         if (this.data.web3) {
             this.data.web3.eth.subscribe("newBlockHeaders", this.walletBalanceSubscription);
@@ -347,6 +353,8 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
 
             this.data.ethereum.off?.("chainChanged", this.walletChainSubscription);
         }
+
+        if (this.#balanceUpdateInterval) clearInterval(this.#balanceUpdateInterval);
 
         if (this.data.web3) this.data.web3.eth.clearSubscriptions(this.walletBalanceSubscription);
 
@@ -379,6 +387,10 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
             const httpWeb3Provider = new Web3(new Web3.providers.HttpProvider(rpcUrl));
 
             rawBalance = await httpWeb3Provider.eth.getBalance(account);
+        }
+
+        if (this.#debugMode) {
+            this.#debugFunction?.("Wallet balance request succeed, new balance is", rawBalance)
         }
 
         return new BigNumber(Web3.utils.fromWei(rawBalance));
@@ -496,7 +508,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
      * @private
      */
     @action
-    private async walletBalanceSubscription (err: Error | undefined) {
+    private async walletBalanceSubscription (err?: Error | undefined) {
         if (this.state.balanceUpdating) return;
 
         this.setState("balanceUpdating", true);
