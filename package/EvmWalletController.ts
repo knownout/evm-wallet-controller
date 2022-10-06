@@ -277,7 +277,11 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
             const accountBalance = await this.getAccountBalance(accounts[0], accountChain);
 
             if (this.#debugMode) this.#debugFunction?.("EVM wallet connected", accounts[0]);
-            this.setState({ connected: true, balance: accountBalance, accountChain });
+            this.setState({
+                accountChain: accountChain ? Boolean(this.networksList[accountChain]) ? accountChain : -1 : -1,
+                connected: true,
+                balance: accountBalance
+            });
 
             this.setData({ accountAddress: accounts[0], connectedWalletKey: walletKey });
 
@@ -390,7 +394,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
         }
 
         if (this.#debugMode) {
-            this.#debugFunction?.("Wallet balance request succeed, new balance is", rawBalance)
+            this.#debugFunction?.("Wallet balance request succeed, new balance is", rawBalance);
         }
 
         return new BigNumber(Web3.utils.fromWei(rawBalance));
