@@ -225,13 +225,12 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
      */
     @action
     public callWalletAction () {
-        if (this.state.loading) return;
-
         // If the wallet is connected, then disable it ...
         if (this.state.connected) this.disconnectWallet?.();
 
+        if (this.state.loading) return;
         // ... or call a modal window to connect the wallet
-        else if (this.#modalKey) modalWindowController.openModal(this.#modalKey);
+        if (this.#modalKey && !this.state.connected) modalWindowController.openModal(this.#modalKey);
     }
 
     /**

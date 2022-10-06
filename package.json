@@ -1,7 +1,7 @@
 {
     "name": "@knownout/evm-wallet-controller",
     "version": "0.0.0",
-    "author": "Alexandr <re-knownout> knownout@hotmail.com",
+    "author": "Alexandr Slavinskii",
     "license": "MIT",
     "description": "EVM wallet controller",
     "scripts": {
@@ -9,13 +9,13 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/re-knownout/evm-wallet-controller.git",
+        "url": "git+https://github.com/knownout/evm-wallet-controller.git",
         "directory": "src/package"
     },
     "bugs": {
-        "url": "https://github.com/re-knownout/evm-wallet-controller/issues"
+        "url": "https://github.com/knownout/evm-wallet-controller/issues"
     },
-    "homepage": "https://github.com/re-knownout/evm-wallet-controller#readme",
+    "homepage": "https://github.com/knownout/evm-wallet-controller#readme",
     "devDependencies": {
         "@babel/core": "^7.18.2",
         "@knownout/base-controller": "^0.1.0",
@@ -28,6 +28,7 @@
         "bignumber.js": "^9.1.0",
         "css-loader": "^6.7.1",
         "html-webpack-plugin": "^5.5.0",
+        "husky": "^8.0.1",
         "jest": "^28.1.0",
         "mini-css-extract-plugin": "^2.6.0",
         "mobx": "^6.6.2",

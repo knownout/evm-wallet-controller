@@ -1,7 +1,7 @@
 {
     "name": "@knownout/evm-wallet-controller",
-    "version": "0.1.4",
-    "author": "Alexandr <re-knownout> knownout@hotmail.com",
+    "version": "0.1.6",
+    "author": "Alexandr Slavinskii",
     "license": "MIT",
     "description": "EVM wallet controller",
     "main": "dist/EvmWalletController.js",
@@ -17,16 +17,16 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/re-knownout/evm-wallet-controller.git",
+        "url": "git+https://github.com/knownout/evm-wallet-controller.git",
         "directory": "src/package"
     },
     "publishConfig": {
         "access": "public"
     },
     "bugs": {
-        "url": "https://github.com/re-knownout/evm-wallet-controller/issues"
+        "url": "https://github.com/knownout/evm-wallet-controller/issues"
     },
-    "homepage": "https://github.com/re-knownout/evm-wallet-controller#readme",
+    "homepage": "https://github.com/knownout/evm-wallet-controller#readme",
     "dependencies": {
         "mobx": "^6.6.2",
         "@knownout/base-controller": "^0.1.0",

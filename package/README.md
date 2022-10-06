@@ -57,5 +57,5 @@ evmWallet.state.balance.toFixed() // Formatted core currency balance as string
 evmWallet.nativeTokenSymbol // Getter
 ```
 
-re-knownout - https://github.com/re-knownout/
+knownout - https://github.com/knownout/
 <br>knownout@hotmail.com
