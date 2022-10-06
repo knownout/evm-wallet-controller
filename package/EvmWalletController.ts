@@ -1,6 +1,3 @@
-import { getNetworksValue, TNetworkInfo } from "./utils/network-utils";
-import waitingEthereumPromise from "./utils/waiting-ethereum-promise";
-import getInstalledWallets from "./utils/get-installed-wallets";
 import BaseController from "@knownout/base-controller";
 import { StorageController } from "@knownout/lib";
 import modalWindowController from "@knownout/modal-window-controller";
@@ -9,6 +6,9 @@ import WalletConnectProvider from "@walletconnect/ethereum-provider";
 import BigNumber from "bignumber.js";
 import { action, computed, makeObservable, observable } from "mobx";
 import Web3 from "web3";
+import getInstalledWallets from "./utils/get-installed-wallets";
+import { getNetworksValue, TNetworkInfo } from "./utils/network-utils";
+import waitingEthereumPromise from "./utils/waiting-ethereum-promise";
 
 /**
  * Cached provider local storage key.
@@ -257,7 +257,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
             return false;
         }
 
-        this.setData({ ethereum, web3: new Web3(ethereum as any) });
+        this.setData({ ethereum, web3: new Web3(ethereum as any), connectedWalletKey: walletKey });
 
         try {
             await this.createWalletSubscription();
@@ -283,7 +283,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
                 balance: accountBalance
             });
 
-            this.setData({ accountAddress: accounts[0], connectedWalletKey: walletKey });
+            this.setData({ accountAddress: accounts[0] });
 
             return true;
         } catch (err) {
@@ -380,7 +380,12 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
         let rawBalance = "0";
 
         try {
-            rawBalance = await this.data.web3.eth.getBalance(account);
+            const promiseRaceList: Promise<any>[] = [ this.data.web3.eth.getBalance(account) ];
+
+            if (this.data.connectedWalletKey?.toLowerCase() === "metamask")
+                promiseRaceList.push(new Promise(r => setTimeout(() => r("0"), 1500)));
+
+            rawBalance = await Promise.race(promiseRaceList);
         } catch { }
 
         if (rawBalance === "0") {
