@@ -240,6 +240,20 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
         // ... or call a modal window to connect the wallet
         if (this.#modalKey && !this.state.connected) modalWindowController.openModal(this.#modalKey);
     }
+    
+    /**
+     * Request to change network.
+     * @param chainId network id
+     */
+    @action
+    public requireNetworkChange(chainId: number) {
+        this.data.ethereum?.request({
+            method: "wallet_switchEthereumChain",
+            params: [{
+                chainId: this.data.web3?.utils.toHex(chainId)
+            }],
+        });
+    }
 
     /**
      * Method for connecting the wallet to the application.
