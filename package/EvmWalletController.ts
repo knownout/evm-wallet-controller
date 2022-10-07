@@ -242,8 +242,9 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
     }
     
     /**
-     * Request to change network.
-     * @param chainId network id
+     * Require connected wallet network change.
+     *
+     * @param chainId {number} network id.
      */
     @action
     public requireNetworkChange(chainId: number) {
@@ -251,7 +252,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
             method: "wallet_switchEthereumChain",
             params: [{
                 chainId: this.data.web3?.utils.toHex(chainId)
-            }],
+            }]
         });
     }
 
