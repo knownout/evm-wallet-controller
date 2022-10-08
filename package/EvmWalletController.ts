@@ -408,17 +408,18 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
      */
     @action
     protected async getAccountBalance (account: string | undefined, chain: number | undefined) {
-        if (!this.data.web3 || !chain || !account) return new BigNumber(0);
+        if (!this.data.web3 || chain === undefined || !account) return new BigNumber(0);
 
         let rawBalance = "0";
 
         try {
-            const promiseRaceList: Promise<any>[] = [ this.data.web3.eth.getBalance(account) ];
-
-            if (this.data.connectedWalletKey?.toLowerCase() === "metamask")
-                promiseRaceList.push(new Promise(r => setTimeout(() => r("0"), 1500)));
-
-            rawBalance = await Promise.race(promiseRaceList);
+            rawBalance = await Promise.race([
+                this.data.web3.eth.getBalance(account),
+                new Promise<string>(r => setTimeout(() => {
+                    if (this.#debugMode) this.#errorFunction?.("Inpage provider balance update timeout");
+                    r("0");
+                }, 1500))
+            ]);
         } catch { }
 
         if (rawBalance === "0") {
@@ -428,7 +429,13 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
 
             const httpWeb3Provider = new Web3(new Web3.providers.HttpProvider(rpcUrl));
 
-            rawBalance = await httpWeb3Provider.eth.getBalance(account);
+            rawBalance = await Promise.race([
+                httpWeb3Provider.eth.getBalance(account),
+                new Promise<string>(r => setTimeout(() => {
+                    if (this.#debugMode) this.#errorFunction?.("HTTP provider balance update timeout");
+                    r("0");
+                }, 4000))
+            ]);
         }
 
         if (this.#debugMode) {
@@ -493,7 +500,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
 
         if (this.#debugMode) this.#debugFunction?.("EVM wallet account changed to", account);
 
-        const accountBalance = await this.getAccountBalance(account, this.state.accountChain);
+        const accountBalance = await this.getAccountBalance(account, changeForChain);
 
         if (!this.state.connected || changeForChain !== this.state.accountChain) return;
 
@@ -563,7 +570,11 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
 
         const accountBalance = await this.getAccountBalance(this.data.accountAddress, this.state.accountChain);
 
-        if (!this.state.connected || changeForChain !== this.state.accountChain) return;
+        if (!this.state.connected || changeForChain !== this.state.accountChain) {
+            if (this.#debugMode) this.#errorFunction?.("Chain changed before balance update finished");
+
+            return;
+        }
 
         this.setState({
             balance: accountBalance,
