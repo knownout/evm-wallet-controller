@@ -571,6 +571,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
         if (!this.state.connected || changeForChain !== this.state.accountChain) {
             if (this.#debugMode) this.#errorFunction?.("Chain changed before balance update finished");
 
+            this.setState("balanceUpdating", false);
             return;
         }
 
