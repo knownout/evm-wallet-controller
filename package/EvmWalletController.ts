@@ -419,10 +419,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
         try {
             rawBalance = await Promise.race([
                 this.data.web3.eth.getBalance(account),
-                new Promise<string>(r => setTimeout(() => {
-                    if (this.#debugMode) this.#errorFunction?.("Inpage provider balance update timeout");
-                    r("0");
-                }, 6000))
+                new Promise<string>(r => setTimeout(() => r("0"), 3000))
             ]);
         } catch { }
 
@@ -435,10 +432,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
 
             rawBalance = await Promise.race([
                 httpWeb3Provider.eth.getBalance(account),
-                new Promise<string>(r => setTimeout(() => {
-                    if (this.#debugMode) this.#errorFunction?.("HTTP provider balance update timeout");
-                    r("0");
-                }, 10000))
+                new Promise<string>(r => setTimeout(() => r("0"), 5000))
             ]);
         }
 
