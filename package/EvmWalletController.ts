@@ -181,7 +181,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
             return;
         }
 
-        if (cachedProvider && cachedProvider === "WalletConnect") {
+        if (cachedProvider && cachedProvider.toLowerCase() === "walletconnect") {
             if (!this.#storageController.exist(WalletConnectDataStorageKey)) {
                 this.#storageController.removeItem(CachedEthereumProviderStorageKey);
 
@@ -240,20 +240,30 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
         // ... or call a modal window to connect the wallet
         if (this.#modalKey && !this.state.connected) modalWindowController.openModal(this.#modalKey);
     }
-    
+
     /**
-     * Require connected wallet network change.
+     * Require a connected wallet to change a network.
      *
-     * @param chainId {number} network id.
+     * @param chainId {number} desired network ID.
      */
     @action
-    public requireNetworkChange(chainId: number) {
-        this.data.ethereum?.request({
-            method: "wallet_switchEthereumChain",
-            params: [{
-                chainId: this.data.web3?.utils.toHex(chainId)
-            }]
-        });
+    public async requireNetworkChange (chainId: number): Promise<boolean> {
+        if (!this.data.ethereum) return false;
+
+        try {
+            await this.data.ethereum?.request({
+                method: "wallet_switchEthereumChain",
+                params: [ { chainId: this.data.web3?.utils.toHex(chainId) } ]
+            }).catch(() => {
+                throw new Error("Network switch request failure");
+            });
+        } catch (err) {
+            if (this.#debugMode) this.#errorFunction?.(err);
+
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -320,7 +330,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
      */
     @action
     protected disconnectWallet () {
-        if (this.data.connectedWalletKey === "WalletConnect") {
+        if (this.data.connectedWalletKey?.toLowerCase() === "walletconnect") {
             this.#storageController.removeItem(WalletConnectDataStorageKey);
         }
 
@@ -351,21 +361,17 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
             return;
         }
 
-        if (this.#balanceUpdateInterval) clearInterval(this.#balanceUpdateInterval);
-
-        this.data.ethereum.off?.("accountsChanged", this.walletAccountsSubscription);
-
-        this.data.ethereum.off?.("chainChanged", this.walletChainSubscription);
+        this.clearWalletSubscription();
 
         this.data.ethereum.on("accountsChanged", this.walletAccountsSubscription as any);
 
         this.data.ethereum.on("chainChanged", this.walletChainSubscription as any);
 
+        this.data.ethereum.on("disconnect", this.walletConnectDisconnectSubscription);
+
         this.#balanceUpdateInterval = setInterval(this.walletBalanceSubscription, 5000);
 
-        if (this.data.web3) {
-            this.data.web3.eth.subscribe("newBlockHeaders", this.walletBalanceSubscription);
-        }
+        if (this.data.web3) this.data.web3.eth.subscribe("newBlockHeaders", this.walletBalanceSubscription);
     }
 
     /**
@@ -378,6 +384,8 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
             this.data.ethereum.off?.("accountsChanged", this.walletAccountsSubscription);
 
             this.data.ethereum.off?.("chainChanged", this.walletChainSubscription);
+
+            this.data.ethereum.off?.("disconnect", this.walletConnectDisconnectSubscription);
         }
 
         if (this.#balanceUpdateInterval) clearInterval(this.#balanceUpdateInterval);
@@ -558,6 +566,15 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
             balance: accountBalance,
             balanceUpdating: false
         });
+    }
+
+    /**
+     * Method for handling WalletConnect custom disconnect events.
+     * @private
+     */
+    @action
+    private walletConnectDisconnectSubscription () {
+        if (this.data.connectedWalletKey?.toLowerCase() === "walletconnect") this.disconnectWallet();
     }
 }
 
