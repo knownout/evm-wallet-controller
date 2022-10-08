@@ -121,6 +121,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
         this.walletBalanceSubscription = this.walletBalanceSubscription.bind(this);
         this.walletChainSubscription = this.walletChainSubscription.bind(this);
         this.walletAccountsSubscription = this.walletAccountsSubscription.bind(this);
+        this.walletConnectDisconnectSubscription = this.walletConnectDisconnectSubscription.bind(this);
     }
 
     /**
