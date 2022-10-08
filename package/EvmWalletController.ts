@@ -323,6 +323,9 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
             return true;
         } catch (err) {
             if (this.#debugMode) this.#errorFunction?.(err);
+
+            this.disconnectWallet();
+
             return false;
         }
     }
@@ -361,6 +364,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
                 "Try to call subscribe methods after setting provider"
             );
 
+            this.disconnectWallet();
             return;
         }
 
