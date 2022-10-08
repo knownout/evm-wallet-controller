@@ -416,10 +416,24 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
 
         let rawBalance = "0";
 
+        const getRacePromise = (timeout: number) => {
+            const targetChain = this.state.accountChain;
+
+            return new Promise<string>(resolve => {
+                setTimeout(() => {
+                    const nextBalance = this.state.accountChain === targetChain
+                        ? Web3.utils.toWei(this.state.balance?.toFixed() ?? "0")
+                        : "0";
+
+                    resolve(nextBalance);
+                }, timeout);
+            });
+        };
+
         try {
             rawBalance = await Promise.race([
                 this.data.web3.eth.getBalance(account),
-                new Promise<string>(r => setTimeout(() => r("0"), 3000))
+                getRacePromise(3000)
             ]);
         } catch { }
 
@@ -432,7 +446,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
 
             rawBalance = await Promise.race([
                 httpWeb3Provider.eth.getBalance(account),
-                new Promise<string>(r => setTimeout(() => r("0"), 5000))
+                getRacePromise(5000)
             ]);
         }
 
