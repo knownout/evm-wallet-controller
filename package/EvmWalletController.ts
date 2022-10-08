@@ -422,7 +422,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
                 new Promise<string>(r => setTimeout(() => {
                     if (this.#debugMode) this.#errorFunction?.("Inpage provider balance update timeout");
                     r("0");
-                }, 1500))
+                }, 6000))
             ]);
         } catch { }
 
@@ -438,7 +438,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
                 new Promise<string>(r => setTimeout(() => {
                     if (this.#debugMode) this.#errorFunction?.("HTTP provider balance update timeout");
                     r("0");
-                }, 4000))
+                }, 10000))
             ]);
         }
 
