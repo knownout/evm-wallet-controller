@@ -133,6 +133,9 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
 
         this.disconnectWallet = this.disconnectWallet.bind(this);
         this.addEventListener = this.addEventListener.bind(this);
+        this.callEvent = this.callEvent.bind(this);
+        this.removeEventListeners = this.removeEventListeners.bind(this);
+        this.removeEventListener = this.removeEventListener.bind(this);
     }
 
     /**
