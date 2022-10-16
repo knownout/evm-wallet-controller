@@ -83,6 +83,12 @@ interface IEvmWalletData {
     accountAddress: string;
 }
 
+export type TEvmWalletEvents = "walletConnected"
+    | "walletDisconnected"
+    | "accountChanged"
+    | "balanceUpdated"
+    | "networkChanged"
+
 /**
  * EVM wallets controller
  */
@@ -97,6 +103,8 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
     #balanceUpdateInterval?: any;
 
     #debugMode = false;
+
+    #eventListeners: Partial<{ [key in TEvmWalletEvents]: Function[] }> = {};
 
     /** Console output function */
     #debugFunction?: (...messages: any[]) => void;
@@ -124,6 +132,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
         this.walletConnectDisconnectSubscription = this.walletConnectDisconnectSubscription.bind(this);
 
         this.disconnectWallet = this.disconnectWallet.bind(this);
+        this.addEventListener = this.addEventListener.bind(this);
     }
 
     /**
@@ -318,7 +327,13 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
                 balance: accountBalance
             });
 
+            this.callEvent("networkChanged", this.state.accountChain);
+            this.callEvent("balanceUpdated", this.state.balance);
+            this.callEvent("walletConnected", accounts[0], walletKey);
+
             this.setData({ accountAddress: accounts[0] });
+
+            this.callEvent("accountChanged", accounts[0]);
 
             return true;
         } catch (err) {
@@ -346,6 +361,8 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
 
         this.resetData();
         this.resetState("loading");
+
+        this.callEvent("walletDisconnected");
 
         if (this.#debugMode) this.#debugFunction?.("EVM wallet disconnected");
     }
@@ -518,6 +535,9 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
 
         this.setState("balance", accountBalance);
         this.setData("accountAddress", account);
+
+        this.callEvent("balanceUpdated", this.state.balance);
+        this.callEvent("accountChanged", account);
     }
 
     /**
@@ -547,6 +567,9 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
                 accountChainValid: false
             });
 
+            this.callEvent("networkChanged", this.state.accountChain);
+            this.callEvent("balanceUpdated", this.state.balance);
+
             if (this.#debugMode) this.#errorFunction?.("Unsupported chain selected:", correctChain);
             return;
         }
@@ -556,11 +579,15 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
         const accountBalance = await this.getAccountBalance(this.data.accountAddress, correctChain);
 
         if (!this.state.connected) return;
+
         this.setState({
             accountChain: correctChain,
             accountChainValid: correctChain >= 0,
             balance: accountBalance
         });
+
+        this.callEvent("networkChanged", this.state.accountChain);
+        this.callEvent("balanceUpdated", this.state.balance);
     }
 
     /**
@@ -589,6 +616,7 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
             return;
         }
 
+        this.callEvent("balanceUpdated", accountBalance);
         this.setState({
             balance: accountBalance,
             balanceUpdating: false
@@ -602,6 +630,96 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
     @action
     private walletConnectDisconnectSubscription () {
         if (this.data.connectedWalletKey?.toLowerCase() === "walletconnect") this.disconnectWallet();
+    }
+
+    /**
+     * Method for adding a listener to the wallet connect event.
+     *
+     * @param {TEvmWalletEvents} event name of the desired event.
+     * @param {Function} listener callback function.
+     */
+    public addEventListener (event: "walletConnected", listener: (account: string, walletKey: string) => void): void;
+
+    /**
+     * Method for adding a listener to the wallet disconnect event.
+     *
+     * @param {TEvmWalletEvents} event name of the desired event.
+     * @param {Function} listener callback function.
+     */
+    public addEventListener (event: "walletDisconnected", listener: () => void): void;
+
+    /**
+     * Method for adding a listener to the connected account change event.
+     *
+     * @param {TEvmWalletEvents} event name of the desired event.
+     * @param {Function} listener callback function.
+     */
+    public addEventListener (event: "accountChanged", listener: (account: string) => void): void;
+
+    /**
+     * Method for adding a listener to the current account balance change event.
+     *
+     * @param {TEvmWalletEvents} event name of the desired event.
+     * @param {Function} listener callback function.
+     */
+    public addEventListener (event: "balanceUpdated", listener: (balance: BigNumber) => void): void;
+
+    /**
+     * Method for adding a listener to the network change event of the current account.
+     *
+     * @param {TEvmWalletEvents} event name of the desired event.
+     * @param {Function} listener callback function.
+     */
+    public addEventListener (event: "networkChanged", listener: (networkId: number) => void): void;
+
+    /**
+     * Method for adding a listener to a specific event.
+     *
+     * @param {TEvmWalletEvents} event name of the desired event.
+     * @param {Function} listener callback function.
+     */
+    @observable
+    public addEventListener (event: TEvmWalletEvents, listener: Function) {
+        if (!this.#eventListeners[event]) this.#eventListeners[event] = [];
+
+        if (this.#eventListeners[event]?.find(fn => String(fn) === String(event))) return;
+
+        this.#eventListeners[event]?.push(listener);
+    }
+
+    /**
+     * Method for removing a specific listener for an event.
+     *
+     * @param {TEvmWalletEvents} event name of the desired event.
+     * @param {Function} listener callback function.
+     */
+    @observable
+    public removeEventListener (event: TEvmWalletEvents, listener: Function) {
+        if (!this.#eventListeners[event]) return;
+
+        this.#eventListeners[event] = this.#eventListeners[event]?.filter(fn => String(fn) !== String(listener));
+    }
+
+    /**
+     * Method for removing all listeners from a specific event, or all listeners if the event name is
+     * not set.
+     * @param {TEvmWalletEvents} event name of the desired event.
+     */
+    @observable
+    public removeEventListeners (event?: TEvmWalletEvents) {
+        if (!event) this.#eventListeners = {};
+        else this.#eventListeners[event] = [];
+    }
+
+    /**
+     * Method to trigger a specific event within a controller.
+     *
+     * @param {TEvmWalletEvents} event name of the desired event.
+     * @param {any} args arguments for the event callback function.
+     * @private
+     */
+    private callEvent (event: TEvmWalletEvents, ...args: any) {
+        if (this.#eventListeners[event]) this.#eventListeners[event]?.forEach(eventCallback => eventCallback(...args));
     }
 }
 
