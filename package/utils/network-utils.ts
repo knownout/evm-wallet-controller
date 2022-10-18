@@ -12,7 +12,7 @@ export type TNetworkInfo = {
  * @param {{[p: number]: TNetworkInfo}} networksList available networks list.
  * @return {any}
  */
-export function getNetworksValue<T = TNetworkInfo> (key: keyof T, networksList: { [key: number]: T }) {
+export function getNetworksValue (key: keyof TNetworkInfo, networksList: { [key: number]: TNetworkInfo }) {
     return Object.fromEntries(Object.entries(networksList).map(([ objectKey, value ]) =>
         [ objectKey, value[key] ]
     ));
