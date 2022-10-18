@@ -88,6 +88,7 @@ export type TEvmWalletEvents = "walletConnected"
     | "accountChanged"
     | "balanceUpdated"
     | "networkChanged"
+    | "controllerInitialized"
 
 /**
  * EVM wallets controller
@@ -193,6 +194,8 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
             this.setState("loading", false);
 
             if (this.#debugMode) this.#debugFunction?.("Cached provider not found, wallet not connected");
+
+            this.callEvent("controllerInitialized");
             return;
         }
 
@@ -202,6 +205,8 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
 
                 if (this.#debugMode)
                     this.#errorFunction?.("WalletConnect data not found, clearing cached provider...");
+
+                this.callEvent("controllerInitialized");
                 return;
             }
 
@@ -214,6 +219,8 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
             await this.connectWallet(walletConnectEthereumProvider as any, cachedProvider);
 
             this.setState("loading", false);
+
+            this.callEvent("controllerInitialized");
             return;
         }
 
@@ -223,6 +230,8 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
             this.setState("loading", false);
 
             if (this.#debugMode) this.#errorFunction?.("Ethereum provider not found, wallet not connected");
+
+            this.callEvent("controllerInitialized");
             return;
         }
 
@@ -232,12 +241,15 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
             this.setState("loading", false);
 
             if (this.#debugMode) this.#errorFunction?.("Wallet", cachedProvider, "not installed, clearing cache...");
+
+            this.callEvent("controllerInitialized");
             return;
         }
 
         await this.connectWallet(wallets.get(cachedProvider) as any, cachedProvider);
 
         this.setState("loading", false);
+        this.callEvent("controllerInitialized");
     }
 
     /**
@@ -635,45 +647,23 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
         if (this.data.connectedWalletKey?.toLowerCase() === "walletconnect") this.disconnectWallet();
     }
 
-    /**
-     * Method for adding a listener to the wallet connect event.
-     *
-     * @param {TEvmWalletEvents} event name of the desired event.
-     * @param {Function} listener callback function.
-     */
+    /** Method for adding a listener to the wallet connect event. */
     public addEventListener (event: "walletConnected", listener: (account: string, walletKey: string) => void): void;
 
-    /**
-     * Method for adding a listener to the wallet disconnect event.
-     *
-     * @param {TEvmWalletEvents} event name of the desired event.
-     * @param {Function} listener callback function.
-     */
+    /** Method for adding a listener to the wallet disconnect event. */
     public addEventListener (event: "walletDisconnected", listener: () => void): void;
 
-    /**
-     * Method for adding a listener to the connected account change event.
-     *
-     * @param {TEvmWalletEvents} event name of the desired event.
-     * @param {Function} listener callback function.
-     */
+    /** Method for adding a listener to the connected account change event. */
     public addEventListener (event: "accountChanged", listener: (account: string) => void): void;
 
-    /**
-     * Method for adding a listener to the current account balance change event.
-     *
-     * @param {TEvmWalletEvents} event name of the desired event.
-     * @param {Function} listener callback function.
-     */
+    /** Method for adding a listener to the current account balance change event. */
     public addEventListener (event: "balanceUpdated", listener: (balance: BigNumber) => void): void;
 
-    /**
-     * Method for adding a listener to the network change event of the current account.
-     *
-     * @param {TEvmWalletEvents} event name of the desired event.
-     * @param {Function} listener callback function.
-     */
+    /** Method for adding a listener to the network change event of the current account. */
     public addEventListener (event: "networkChanged", listener: (networkId: number) => void): void;
+
+    /** Method for adding a listener to the initialization event. */
+    public addEventListener (event: "controllerInitialized", listener: (networkId: number) => void): void;
 
     /**
      * Method for adding a listener to a specific event.
