@@ -1,6 +1,6 @@
 {
     "name": "@knownout/evm-wallet-controller",
-    "version": "0.1.35",
+    "version": "0.1.36",
     "author": "Alexandr Slavinskii",
     "license": "MIT",
     "description": "EVM wallet controller",
