@@ -675,6 +675,12 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
     public addEventListener (event: TEvmWalletEvents, listener: Function) {
         if (!this.#eventListeners[event]) this.#eventListeners[event] = [];
 
+        if (event === "walletConnected" && this.state.connected)
+            this.callEvent("walletConnected", this.data.accountAddress, this.data.connectedWalletKey);
+
+        if (event === "controllerInitialized" && this.state.loading === false)
+            this.callEvent("controllerInitialized");
+
         if (this.#eventListeners[event]?.find(fn => String(fn) === String(event))) return;
 
         this.#eventListeners[event]?.push(listener);
