@@ -408,9 +408,9 @@ class EvmWalletController extends BaseController<IEvmWalletState, Partial<IEvmWa
 
         this.data.ethereum.on("disconnect", this.walletConnectDisconnectSubscription);
 
-        this.#balanceUpdateInterval = setInterval(this.walletBalanceSubscription, 5000);
+        this.#balanceUpdateInterval = setInterval(this.walletBalanceSubscription, 3000);
 
-        if (this.data.web3) this.data.web3.eth.subscribe("newBlockHeaders", this.walletBalanceSubscription);
+        // if (this.data.web3) this.data.web3.eth.subscribe("newBlockHeaders", this.walletBalanceSubscription);
     }
 
     /**
